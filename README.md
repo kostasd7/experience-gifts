@@ -24,7 +24,7 @@ The data for the "Destination" field fetched from ```destinations.json``` file p
 
 The allowed dates for selection are 2 days from today as minimum and one year in the future as maximum. The maximum range that can be selected is 30 days.
 
-The maximum number of rooms is 4 and the maximum number of total guests (including children) is 9.
+The maximum number of rooms is 4 and the maximum number of total guests (including children) is 9. At least one adult is required for this field to be valid. Number of children per room must not exceed the number of adults per room.
 
 Upon submission all selected data must be collected and saved in a JavaScript object that can be logged to the browser's console. 
 
