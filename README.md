@@ -48,7 +48,7 @@ You are free to use any front-end technologies that you see fit for completing t
 ## Submission
 Please clone the repository and create a private repository on your own account. Then, create a new branch and submit a Pull Request with your proposed solution. Make sure to add and request review on the PR of the following github users:
 
-- @dimitris-eg
+- @GeorgeExperiencegift
 
 
 **Good luck!**
