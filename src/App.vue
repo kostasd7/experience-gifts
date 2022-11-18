@@ -1,29 +1,50 @@
 <template>
-  <div id="app">
-    <img alt="Vue logo" src="./assets/bg-image.jpg" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
-  </div>
+  <v-app class="wrapper">
+    <v-main class="main">
+      <h1 class="header center">Book your hotel stay</h1>
+      <p class="center">
+        Redeem your Hotelgift voucher for your next hotel stay.
+      </p>
+      <FormWrapper />
+    </v-main>
+  </v-app>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-import HelloWorld from "./components/HelloWorld.vue";
+import FormWrapper from "./components/FormWrapper.vue";
 
 export default Vue.extend({
   name: "App",
   components: {
-    HelloWorld,
+    FormWrapper,
   },
 });
 </script>
 
 <style lang="scss">
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+.v-application {
+  &.wrapper {
+    padding: 25px;
+    background: url("./assets/bg-image.jpg") center left/cover no-repeat;
+    color: #1a244f;
+    font-size: 16px;
+  }
+}
+
+.v-main__wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.header {
+  color: #1c2651;
+  font-size: 30px;
+}
+
+.center {
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 </style>
