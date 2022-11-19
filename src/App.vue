@@ -26,7 +26,7 @@ export default Vue.extend({
 .v-application {
   &.wrapper {
     padding: 25px;
-    background: url("./assets/bg-image.jpg") center left/cover no-repeat;
+    background: url("./assets/bg-image.jpg") fixed center left/cover no-repeat;
     color: #1a244f;
     font-size: 16px;
   }
@@ -37,6 +37,18 @@ export default Vue.extend({
   align-items: center;
   justify-content: center;
   flex-direction: column;
+}
+
+.v-input__slot {
+  padding: 0 0 0 5px !important;
+}
+
+.v-select__selection {
+  order: 1;
+}
+
+.v-dialog {
+  max-width: 500px;
 }
 
 .header {
