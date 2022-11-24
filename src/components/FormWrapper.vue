@@ -1,104 +1,17 @@
 <template>
   <form class="form white">
-    <div>
-      <div class="form-item">
-        <img src="../assets/icon-bed.svg" class="icon" alt="icon-bed" />
-        <v-autocomplete
-          v-model="destination"
-          :items="items"
-          :search-input.sync="search"
-          solo
-          flat
-          hide-details
-          hide-no-data
-          loader-height="0"
-          label="Destination"
-          item-text="name"
-          item-value="code"
-          @change="validateSearch"
-        />
-      </div>
-      <p v-if="searchError" class="error-text">{{ searchError }}</p>
-    </div>
+    <form-destination
+      @[emitEvent]="changeDestination"
+      :error="destinationError"
+    />
 
-    <v-dialog v-model="dialog" content-class="dialog">
-      <template #activator="{ on }">
-        <div>
-          <FormDatePicker class="form-item" @click.native="toggle" v-on="on" />
-          <p v-if="datesError" class="error-text">{{ datesError }}</p>
-        </div>
-      </template>
-      <v-date-picker
-        v-model="dates"
-        :min="minDate"
-        :max="maxDate"
-        :first-day-of-week="1"
-        show-adjacent-months
-        scrollable
-        no-title
-        color="#D78D00"
-        header-color="#D78D00"
-        range
-        @change="validateDates"
-      />
-      <div class="white center">
-        <FormDates
-          v-if="hasDates"
-          :dateStart="formatDate(dates[0])"
-          :dateEnd="formatDate(dates[1])"
-          :diff="daysDiff"
-        />
-        <button
-          @click.prevent="
-            validateDates();
-            toggle();
-          "
-          class="button-s"
-        >
-          Done
-        </button>
-      </div>
-    </v-dialog>
+    <form-date-picker @[emitEvent]="changeDates" />
 
-    <div>
-      <div class="form-item">
-        <img
-          src="../assets/icon-passengers.svg"
-          class="icon"
-          alt="icon-passengers"
-        />
-        <v-select
-          v-model="selectAdults"
-          :items="adults"
-          solo
-          flat
-          hide-details
-          suffix="Adults"
-          label="Adults"
-          @change="validateGuests"
-        />
-        <v-select
-          v-model="selectChildren"
-          :items="children"
-          solo
-          flat
-          hide-details
-          suffix="Children"
-          label="Children"
-          @change="validateGuests"
-        />
-        <v-select
-          v-model="selectRooms"
-          :items="rooms"
-          solo
-          flat
-          hide-details
-          suffix="Rooms"
-          label="Rooms"
-        />
-      </div>
-      <p v-if="guestsError" class="error-text">{{ guestsError }}</p>
-    </div>
+    <form-guests
+      @[emitEvent]="changeGuests"
+      :guest-rooms="guests"
+      :default-guest-room="defaultGuests"
+    />
 
     <button v-ripple class="button" @click.prevent="onClick">Search</button>
   </form>
@@ -106,144 +19,65 @@
 
 <script lang="ts">
 import Vue from "vue";
-import FormDatePicker from "./FormDatePicker.vue";
-import FormDates from "@/components/FormDates.vue";
-
-declare let destinations: Array<{ name: string; code: string }>;
-const MAX_GUESTS = 10;
-const MAX_ROOMS = 5;
-const DAY_MS = 1_000 * 60 * 60 * 24;
+import FormDatePicker from "@/components/FormDatePicker.vue";
+import FormDestination from "@/components/FormDestination.vue";
+import FormGuests from "@/components/FormGuests.vue";
+import { Emit } from "@/constants/Emit";
+import { IGuestRoom } from "@/Interface/IGuestRoom";
 
 export default Vue.extend({
   name: "FormWrapper",
   components: {
-    FormDates,
+    FormDestination,
     FormDatePicker,
+    FormGuests,
   },
   data: (): {
-    items: Array<{ name: string; code: string }>;
-    adults: number[];
-    children: number[];
-    rooms: number[];
     destination: string;
-    search: string;
-    dialog: boolean;
     dates: string[];
-    selectAdults: number;
-    selectChildren: number;
-    selectRooms: number;
-    searchError: string;
-    datesError: string;
-    guestsError: string;
+    guests: IGuestRoom[];
+    destinationError: string;
+    emitEvent: string;
   } => ({
-    items: [],
-    adults: [],
-    children: [],
-    rooms: [],
     destination: "",
-    search: "",
-    dialog: false,
     dates: [],
-    selectAdults: 2,
-    selectChildren: 0,
-    selectRooms: 1,
-    searchError: "",
-    datesError: "",
-    guestsError: "",
+    guests: [],
+    destinationError: "",
+    emitEvent: Emit.CHANGE,
   }),
-  computed: {
-    minDate(): string {
-      return new Date(new Date().getTime() + DAY_MS * 2).toISOString();
-    },
-    maxDate(): string {
-      const endDate = this.dates.length
-        ? new Date(this.dates[0]).getTime() + DAY_MS * 30
-        : new Date().getTime() + DAY_MS * 365;
-
-      return new Date(endDate).toISOString();
-    },
-    hasDates(): boolean {
-      return this.dates.length > 1;
-    },
-    daysDiff(): number {
-      let diff = 0;
-
-      if (this.hasDates) {
-        const date0 = new Date(this.dates[0]).getTime();
-        const date1 = new Date(this.dates[1]).getTime();
-        const dateDiff = date1 - date0;
-        diff = dateDiff / DAY_MS;
-      }
-
-      return diff;
-    },
-  },
   mounted(): void {
-    const guestArr = [...Array(MAX_GUESTS).keys()];
-    const roomArr = [...Array(MAX_ROOMS).keys()];
-
-    this.adults = guestArr.slice(1, MAX_GUESTS);
-    this.children = guestArr.slice(0, -1);
-    this.rooms = roomArr.slice(1, MAX_ROOMS);
+    this.guests.push(this.defaultGuests);
   },
-  watch: {
-    search(val) {
-      if (val?.length > 2 && !this.items.length) {
-        this.items = destinations;
-        this.items.length = 5_000;
-      }
+  computed: {
+    defaultGuests(): IGuestRoom {
+      return { adults: 2, children: [] };
     },
   },
   methods: {
-    toggle(): void {
-      this.dialog = !this.dialog;
+    changeDestination(destination: string): void {
+      this.destination = destination;
+      this.validateDestination();
     },
-    formatDate(dateStr: string): {
-      day: string;
-      month: string;
-      date: string;
-      year: string;
-    } {
-      const dateFull = new Date(dateStr).toDateString();
-      const [day, month, date, year] = dateFull.split(" ");
-
-      return { day, month, date, year };
+    changeDates(dates: string[]): void {
+      this.dates = dates;
     },
-    validateSearch(): void {
-      this.searchError = this.destination ? "" : "Please select a destination.";
+    changeGuests(guests: IGuestRoom[]): void {
+      this.guests = guests;
     },
-    validateDates(): void {
-      if (new Date(this.dates[0]) > new Date(this.dates[1])) {
-        this.dates.sort();
-      }
-
-      this.datesError = this.hasDates ? "" : "Please select dates.";
-    },
-    validateGuests(): void {
-      const total = this.selectAdults + this.selectChildren;
-
-      if (total >= MAX_GUESTS) {
-        this.guestsError = `Max number of guests is ${MAX_GUESTS - 1}.`;
-      } else if (this.selectAdults < this.selectChildren) {
-        this.guestsError =
-          "Number of children per room must not exceed the number of adults per room.";
-      } else {
-        this.guestsError = "";
-      }
+    validateDestination(): void {
+      this.destinationError = this.destination
+        ? ""
+        : "Please select a destination.";
     },
     onClick(): void {
-      this.validateSearch();
-      this.validateDates();
-      this.validateGuests();
+      this.validateDestination();
 
-      if (this.searchError || this.datesError || this.guestsError) return;
+      if (this.destinationError) return;
 
       const obj = {
         destination: this.destination,
         dates: this.dates,
-        adults: this.selectAdults,
-        children: this.selectChildren,
-        rooms: this.selectRooms,
+        guests: this.guests,
       };
 
       console.log(obj);
@@ -253,41 +87,44 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-$desktop-breakpoint: 1024px;
+$color-orange: #d78d00;
+$color-gray: #e3e3e3;
 
 %form-item {
   border-radius: 5px;
   height: 60px;
 }
 
+.grid {
+  display: grid;
+  gap: 10px;
+}
+
 .form {
+  @extend .grid;
+  max-width: 400px;
   padding: 15px;
   border-radius: 10px;
   opacity: 0.88;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
 }
 
 .form-item {
   @extend %form-item;
 
-  padding: 10px 15px;
+  padding: 10px 16px;
   border: 1px solid #e3e3e3;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .icon {
   width: 20px;
   margin-right: 10px;
-  fill: #d78d00;
+  fill: $color-orange;
 }
 
 .error-text {
   color: red;
-  margin: 5px 0 10px;
+  margin: 5px 12px;
 }
 
 .white {
@@ -295,7 +132,7 @@ $desktop-breakpoint: 1024px;
 }
 
 %button {
-  background: #d78d00;
+  background: $color-orange;
   color: white;
   font-weight: bold;
 }
@@ -308,18 +145,26 @@ $desktop-breakpoint: 1024px;
   @extend %form-item, %button;
 
   height: 34px;
-  width: 237px;
-  margin-bottom: 20px;
 }
 
-@media screen and (min-width: $desktop-breakpoint) {
+@media screen and (min-width: 768px) {
+  .form {
+    max-width: 750px;
+  }
+}
+
+@media screen and (min-width: 1280px) {
   .form {
     display: flex;
-    max-width: $desktop-breakpoint;
+    max-width: 1200px;
   }
 
   .button {
-    min-width: 150px;
+    width: 150px;
+  }
+
+  .icon {
+    margin-right: 5px;
   }
 }
 </style>
